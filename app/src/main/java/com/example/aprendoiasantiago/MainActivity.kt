@@ -101,10 +101,11 @@ fun AppNavigation() {
         "detalle_punto" -> {
             DetallePuntoScreen(
                 point = selectedPoint,
+                activePlayer = selectedPlayer,
                 onNavigateBack = { currentScreen = "mapa" },
-                onNavigateToEscaner = {
-                    Toast.makeText(context, "¡Punto escaneado! +100 PTS", Toast.LENGTH_SHORT).show()
-                    currentScreen = "mapa"
+                onPointCompleted = { updatedPlayer ->
+                    selectedPlayer = updatedPlayer // Sincroniza el usuario con sus nuevos puntos
+                    currentScreen = "dashboard"    // Vuelve al panel con los puntos actualizados
                 }
             )
         }
