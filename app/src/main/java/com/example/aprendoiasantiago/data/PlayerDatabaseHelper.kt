@@ -148,4 +148,15 @@ class PlayerDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABAS
         cursor.close()
         return player
     }
+    // Sumar puntos e incrementar el contador de QR en SQLite
+    fun addPointsToPlayer(playerId: Int, pointsToAdd: Int): Boolean {
+        val player = getPlayerById(playerId) ?: return false
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("points", player.points + pointsToAdd)
+            put("qr_count", player.qrCount + 1)
+        }
+        val result = db.update("players", values, "id = ?", arrayOf(playerId.toString()))
+        return result > 0
+    }
 }
