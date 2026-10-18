@@ -58,4 +58,5 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 }
