@@ -45,6 +45,7 @@ fun AppNavigation() {
             "registro" -> currentScreen = "player_selection"
             "player_selection" -> currentScreen = "welcome"
             "dashboard" -> currentScreen = "player_selection"
+            "editar_perfil" -> currentScreen = "dashboard"
             "mapa" -> currentScreen = "dashboard"
             "detalle_punto" -> currentScreen = "mapa"
             else -> currentScreen = "welcome"
@@ -84,7 +85,16 @@ fun AppNavigation() {
                     Toast.makeText(context, "Sección Colección en desarrollo", Toast.LENGTH_SHORT).show()
                 },
                 onNavigateToPerfil = { currentScreen = "player_selection" },
+                onNavigateToEditarPerfil = { currentScreen = "editar_perfil" }, // <--- Pasamos la acción
                 onNavigateBack = { currentScreen = "player_selection" }
+            )
+        }
+
+        "editar_perfil" -> {
+            EditarPerfilScreen(
+                player = selectedPlayer,
+                onNavigateBack = { currentScreen = "dashboard" },
+                onPerfilActualizado = { currentScreen = "dashboard" }
             )
         }
 

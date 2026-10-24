@@ -7,6 +7,7 @@ data class Player(
     val id: Int,
     val name: String,
     val alias: String,
+    val avatar: String,
     val points: Int = 0,
     val qrCount: Int = 0,
     val pass: String,

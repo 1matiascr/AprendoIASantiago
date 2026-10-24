@@ -1,6 +1,10 @@
 package com.example.aprendoiasantiago.ui.screens
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -24,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -33,6 +39,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.aprendoiasantiago.data.PlayerDatabaseHelper
 import com.example.aprendoiasantiago.ui.viewmodels.RegistroViewModel
 
@@ -47,14 +54,28 @@ fun RegistroJugadorScreen(
     val context = LocalContext.current
     val dbHelper = remember { PlayerDatabaseHelper(context) }
 
+    // Launcher para abrir la galería
+    var customUri by remember { mutableStateOf<Uri?>(null) }
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            customUri = uri
+            viewModel.onAvatarSelected(-1) // -1 indica foto personalizada
+        }
+    }
+
     // Manejo de éxito del registro
     LaunchedEffect(uiState.registroExitoso) {
         if (uiState.registroExitoso) {
-            // Guardar también en SQLite para persistencia real
+            // Guardar la URI personalizada como string, o el identificador por defecto
+            val avatarPath = if (customUri != null) customUri.toString() else "avatar_${uiState.selectedAvatarId}"
+
             dbHelper.insertPlayer(
                 name = uiState.nombre,
                 alias = uiState.alias,
-                pass = uiState.password
+                pass = uiState.password,
+                avatar = avatarPath
             )
             Toast.makeText(context, "¡Jugador creado con éxito!", Toast.LENGTH_SHORT).show()
             viewModel.resetRegistroExitoso()
@@ -99,9 +120,9 @@ fun RegistroJugadorScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 1. Selector de Avatar
+            // 1. Selector de Avatar (Predeterminados + Galería)
             Text(
-                text = "Selecciona tu Avatar",
+                text = "Selecciona tu Avatar o Foto",
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 modifier = Modifier.align(Alignment.Start)
@@ -110,13 +131,15 @@ fun RegistroJugadorScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Avatares predeterminados (1 al 4)
                 listOf(1, 2, 3, 4).forEach { avatarId ->
-                    val isSelected = uiState.selectedAvatarId == avatarId
+                    val isSelected = uiState.selectedAvatarId == avatarId && customUri == null
                     Box(
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(56.dp)
                             .clip(CircleShape)
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primaryContainer
@@ -127,14 +150,52 @@ fun RegistroJugadorScreen(
                                 color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                                 shape = CircleShape
                             )
-                            .clickable { viewModel.onAvatarSelected(avatarId) },
+                            .clickable {
+                                customUri = null
+                                viewModel.onAvatarSelected(avatarId)
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = if (avatarId % 2 == 0) Icons.Default.Face else Icons.Default.Star,
                             contentDescription = "Avatar $avatarId",
                             tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                // Opción 5: Imagen desde la Galería
+                val isCustomSelected = customUri != null
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isCustomSelected) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .border(
+                            width = if (isCustomSelected) 3.dp else 0.dp,
+                            color = if (isCustomSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            shape = CircleShape
+                        )
+                        .clickable { galleryLauncher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (customUri != null) {
+                        AsyncImage(
+                            model = customUri,
+                            contentDescription = "Foto elegida",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AddPhotoAlternate,
+                            contentDescription = "Elegir de Galería",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
@@ -188,7 +249,7 @@ fun RegistroJugadorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Mensaje de Error si aplica
+            // Mensaje de Error
             uiState.errorMensaje?.let { error ->
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
@@ -201,7 +262,7 @@ fun RegistroJugadorScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // 5. Botón de Registro / Indicador de Carga
+            // 5. Botón de Registro
             Button(
                 onClick = { viewModel.crearJugador() },
                 enabled = !uiState.isCargando,

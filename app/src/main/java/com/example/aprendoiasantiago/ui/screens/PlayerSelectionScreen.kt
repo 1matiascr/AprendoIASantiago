@@ -6,20 +6,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.example.aprendoiasantiago.R
 import com.example.aprendoiasantiago.data.PlayerDatabaseHelper
 import com.example.aprendoiasantiago.model.Player
+import com.example.aprendoiasantiago.ui.components.UserAvatar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -291,12 +288,6 @@ fun PlayerCardItem(
         else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
     }
 
-    val iconAvatar = when {
-        player.isAdmin -> Icons.Default.AdminPanelSettings
-        player.isCreator -> Icons.Default.Star
-        else -> Icons.Default.Person
-    }
-
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
@@ -315,20 +306,11 @@ fun PlayerCardItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.size(44.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = iconAvatar,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+                // Reemplazamos la Surface genérica por nuestro componente UserAvatar
+                UserAvatar(
+                    avatarPath = player.avatar,
+                    modifier = Modifier.size(48.dp)
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -409,7 +391,6 @@ fun PlayerCardItem(
 
             // Acciones a la derecha: Eliminar e Ingresar
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Deshabilitar la opción de borrar para la cuenta admin principal si es necesario
                 if (!player.isAdmin) {
                     IconButton(onClick = onDeleteClick) {
                         Icon(
